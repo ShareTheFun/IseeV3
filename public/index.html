@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Futuristic YouTube Downloader</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #00ffff;
+      --secondary-color: #ff00ff;
+      --bg-color: #000033;
+      --text-color: #ffffff;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --input-bg: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow-x: hidden; /* Disable horizontal scrolling */
+      overflow-y: auto; /* Enable vertical scrolling */
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .container {
+      background: var(--card-bg);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      width: 90%;
+      max-width: 900px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      margin: 2rem auto;
+      overflow-x: hidden; /* Prevent horizontal overflow */
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg 340deg,
+        var(--primary-color) 360deg
+      );
+      animation: rotate 4s linear infinite;
+    }
+
+    .container::after {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      background: var(--card-bg);
+      border-radius: 15px;
+      z-index: -1;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .logo i {
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: var(--primary-color);
+    }
+
+    p {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    input {
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 30px;
+      font-size: 1rem;
+      outline: none;
+      background: var(--input-bg);
+      color: var(--text-color);
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    input:focus {
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    button {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 30px;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      color: var(--bg-color);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      width: 100%;
+      max-width: 200px;
+      margin: 0 auto;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+    }
+
+    .result, .error {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .video-container {
+      margin: 2rem 0;
+      width: 100%;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    #videoPlayer {
+      width: 100%;
+      background: #000;
+      display: block;
+    }
+
+    .video-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      padding: 10px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 30px;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 10;
+    }
+
+    .video-controls.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      pointer-events: none;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .control-btn:hover {
+      color: var(--secondary-color);
+      transform: scale(1.1);
+    }
+
+    .progress-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--primary-color);
+      width: 0;
+      transition: width 0.1s linear;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 51, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--primary-color);
+      border-top: 3px solid var(--secondary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.8rem 2rem;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      color: var(--bg-color);
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .video-controls {
+        padding: 8px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <div class="container">
+    <div class="logo">
+      <i class="fab fa-youtube"></i>
+    </div>
+    <h1>Futuristic YouTube Downloader</h1>
+    <p>Experience the future of video downloading with our cutting-edge tool.</p>
+
+    <form id="downloadForm">
+      <input type="text" id="urlInput" placeholder="Enter YouTube URL" required>
+      <button type="submit">
+        <i class="fas fa-download"></i> Download
+      </button>
+    </form>
+
+    <div id="result" class="result hidden">
+      <h3 id="videoTitle"></h3>
+
+      <div class="video-container">
+        <div class="video-wrapper">
+          <video id="videoPlayer" controls>
+            <source id="videoSource" src="" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div class="video-controls hidden">
+            <button id="playPauseBtn" class="control-btn">
+              <i class="fas fa-play"></i>
+            </button>
+            <button id="fullscreenBtn" class="control-btn">
+              <i class="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button id="downloadBtn" class="download-btn">
+        <i class="fas fa-download"></i> Download Video
+      </button>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loader"></div>
+    <p class="loading-text">Preparing your download...</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS.load('particles-js', 'particles.json', function() {
+      console.log('particles.js loaded - callback');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('downloadForm');
+      const resultDiv = document.getElementById('result');
+      const errorDiv = document.getElementById('error');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const videoPlayer = document.getElementById('videoPlayer');
+      const videoSource = document.getElementById('videoSource');
+      const videoControls = document.querySelector('.video-controls');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const videoTitle = document.getElementById('videoTitle');
+      const progressBar = document.getElementById('progressBar');
+      const progressContainer = document.querySelector('.progress-container');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      let videoData = null;
+
+      // Set initial scroll position to top on load
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
+      // YouTube URL validation function
+      function isYouTubeUrl(url) {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|.+\?v=)?([A-Za-z0-9_-]{11})(\S*)$/;
+        return youtubeRegex.test(url);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = document.getElementById('urlInput').value.trim();
+
+        if (!isYouTubeUrl(url)) {
+          errorDiv.textContent = 'Please enter a valid YouTube URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)';
+          errorDiv.classList.remove('hidden');
+          resultDiv.classList.add('hidden');
+          return;
+        }
+
+        resultDiv.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+        loadingOverlay.classList.remove('hidden');
+
+        try {
+          const response = await fetch(`/api/download?url=${encodeURIComponent(url)}`);
+          const data = await response.json();
+
+          loadingOverlay.classList.add('hidden');
+
+          if (data.success) {
+            videoTitle.textContent = data.data.title;
+            videoSource.src = data.data.video_hd || data.data.video;
+            videoData = data.data;
+            videoPlayer.load();
+            resultDiv.classList.remove('hidden');
+          } else {
+            errorDiv.textContent = data.error || 'Failed to fetch video data';
+            errorDiv.classList.remove('hidden');
+          }
+        } catch (err) {
+          loadingOverlay.classList.add('hidden');
+          errorDiv.textContent = 'An error occurred. Please check the URL and try again.';
+          errorDiv.classList.remove('hidden');
+          console.error('Error:', err);
+        }
+      });
+
+      const videoWrapper = document.querySelector('.video-wrapper');
+      videoWrapper.addEventListener('mouseenter', () => {
+        videoControls.classList.remove('hidden');
+      });
+      videoWrapper.addEventListener('mouseleave', () => {
+        if (!videoPlayer.paused) {
+          videoControls.classList.add('hidden');
+        }
+      });
+
+      function togglePlayPause() {
+        if (videoPlayer.paused) {
+          videoPlayer.play();
+          playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+          videoPlayer.pause();
+          playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        }
+      }
+
+      playPauseBtn.addEventListener('click', togglePlayPause);
+      videoPlayer.addEventListener('click', togglePlayPause);
+
+      fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          if (videoWrapper.requestFullscreen) {
+            videoWrapper.requestFullscreen();
+          } else if (videoWrapper.webkitRequestFullscreen) {
+            videoWrapper.webkitRequestFullscreen();
+          } else if (videoWrapper.msRequestFullscreen) {
+            videoWrapper.msRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      });
+
+      videoPlayer.addEventListener('timeupdate', () => {
+        const percentage = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+        progressBar.style.width = `${percentage}%`;
+      });
+
+      progressContainer.addEventListener('click', (e) => {
+        const pos = (e.pageX - progressContainer.getBoundingClientRect().left) / progressContainer.offsetWidth;
+        videoPlayer.currentTime = pos * videoPlayer.duration;
+      });
+
+      videoPlayer.addEventListener('play', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+      });
+
+      videoPlayer.addEventListener('pause', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+      });
+
+      videoPlayer.addEventListener('ended', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-redo"></i>';
+      });
+
+      async function downloadVideo(videoUrl, title) {
+        if (!videoUrl) {
+          errorDiv.textContent = 'Video URL is not available.';
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+
+        try {
+          loadingOverlay.classList.remove('hidden');
+
+          const a = document.createElement('a');
+          a.href = `/api/download-file?videoUrl=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(title)}`;
+          a.download = `${title.replace(/[^\w\s]/gi, '')}.mp4`;
+          document.body.appendChild(a);
+
+          a.click();
+
+          setTimeout(() => {
+            document.body.removeChild(a);
+            loadingOverlay.classList.add('hidden');
+          }, 1000);
+        } catch (err) {
+          console.error('Download error:', err);
+          loadingOverlay.classList.add('hidden');
+          errorDiv.textContent = 'Failed to download video. Please try again.';
+          errorDiv.classList.remove('hidden');
+        }
+      }
+
+      downloadBtn.addEventListener('click', () => {
+        if (videoData) {
+          const videoUrl = videoData.video_hd || videoData.video;
+          downloadVideo(videoUrl, videoData.title);
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (videoData) {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlayPause();
+          } else if (e.code === 'ArrowRight') {
+            videoPlayer.currentTime += 10;
+          } else if (e.code === 'ArrowLeft') {
+            videoPlayer.currentTime -= 10;
+          } else if (e.code === 'KeyF') {
+            fullscreenBtn.click();
+          } else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+            // Let browser handle vertical scrolling naturally unless in video context
+            if (document.activeElement !== document.body) {
+              e.preventDefault();
+            }
+          }
+        }
+      });
+
+      // Debounce function to limit rapid scroll events
+      function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+      }
+
+      // Simplified smooth scrolling for wheel (optional customization)
+      const handleScroll = debounce((e) => {
+        // Only adjust scroll if necessary; otherwise, let browser handle it
+        if (e.target.closest('.video-wrapper')) {
+          e.preventDefault(); // Prevent scroll if interacting with video
+        }
+      }, 50);
+
+      window.addEventListener('wheel', handleScroll, { passive: false });
+
+      // Ensure page starts at top and doesn't auto-scroll
+      window.addEventListener('load', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+
+      // Prevent scroll on form focus or input
+      document.getElementById('urlInput').addEventListener('focus', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>
